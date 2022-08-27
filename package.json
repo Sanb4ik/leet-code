@@ -1,0 +1,24 @@
+{
+  "dependencies": {
+    "dotenv": "^16.0.1",
+    "puppeteer": "^16.2.0"
+  },
+  "name": "leetcode",
+  "description": "206. Reverse Linked List: https://leetcode.com/submissions/detail/781071616/\r 869. Reordered Power of 2: https://leetcode.com/submissions/detail/783779985/\r 383. Ransom Note: https://leetcode.com/submissions/detail/783345458/\r 234. Palindrome Linked List: https://leetcode.com/submissions/detail/781050198/\r 477. Total Hamming Distance: https://leetcode.com/submissions/detail/780215922/\r 1780. Check if Number is a Sum of Powers of Three: https://leetcode.com/submissions/detail/780164422/",
+  "version": "1.0.0",
+  "main": "leetcode.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sanb4ik/leet-code.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Sanb4ik/leet-code/issues"
+  },
+  "homepage": "https://github.com/Sanb4ik/leet-code#readme"
+}
