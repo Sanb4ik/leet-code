@@ -4,6 +4,14 @@ require('dotenv').config();
 const password = process.env.password
 const email = process.env.email
 
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/Auto');
+
+const Leetcode = mongoose.model('Submissions', { name: String, runtime: String, language: String, url: String});
+
+// const bus = new Auto({ name: 'KaMAZ' });
+// bus.save().then(() => console.log('ppp'));
+
 var Submission = {
   name:'',
   status:'',
@@ -79,7 +87,7 @@ async function GoToSubmissions(page){
   await page.click('body > div:nth-child(32) > div > div > ul > li:nth-child(5) > a')
 }
 
-async function  GetSubmission(page){
+async function GetSubmission(page){
   await page.waitForTimeout(3000) 
   for (let i = 1; i < 21; i++) {
     let  _submission = Object.create(Submission);
@@ -89,8 +97,11 @@ async function  GetSubmission(page){
     _submission.language = await getLanguage(page, i)
     _submission.url = 'https://leetcode.com'+ await getUrl(page, i)
     
-    if( _submission.runtime !== 'N/A' )
+    if( _submission.runtime !== 'N/A' ){
+      const mongo = new Leetcode({ name: _submission.name, status: _submission.status, language: _submission.language, url: _submission.url });
+      mongo.save().then(() => console.log('save success'));
       LeetcodeSubmissions.push(_submission);
+    }
   }
 }
 
