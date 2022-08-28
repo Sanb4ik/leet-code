@@ -5,7 +5,7 @@ const password = process.env.password
 const email = process.env.email
 
 const mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/Auto');
+mongoose.connect('mongodb://localhost:27017/Leetcode');
 
 const Leetcode = mongoose.model('Submissions', { name: String, runtime: String, language: String, url: String});
 
@@ -87,21 +87,35 @@ async function GoToSubmissions(page){
   await page.click('body > div:nth-child(32) > div > div > ul > li:nth-child(5) > a')
 }
 
+async function SaveInMongo(_submission){
+  if( _submission.runtime !== 'N/A' ){
+
+    const mongo = new Leetcode({
+       name: _submission.name,
+       status: _submission.status,
+       language: _submission.language,
+       url: _submission.url
+    });
+    
+    if (!!Leetcode.find({ name: _submission.name })) {
+      {console.log("new submission", _submission.name)
+      mongo.save().then(() => console.log('save success'));
+    };
+    } else console.log("exists", _submission.name);
+    LeetcodeSubmissions.push(_submission);
+  }
+}
+
 async function GetSubmission(page){
   await page.waitForTimeout(3000) 
   for (let i = 1; i < 21; i++) {
-    let  _submission = Object.create(Submission);
+    let _submission = Object.create(Submission);
     _submission.name = await getName(page, i)
     _submission.status = await getStatus(page, i)
     _submission.runtime = await getRuntime(page, i)
     _submission.language = await getLanguage(page, i)
     _submission.url = 'https://leetcode.com'+ await getUrl(page, i)
-    
-    if( _submission.runtime !== 'N/A' ){
-      const mongo = new Leetcode({ name: _submission.name, status: _submission.status, language: _submission.language, url: _submission.url });
-      mongo.save().then(() => console.log('save success'));
-      LeetcodeSubmissions.push(_submission);
-    }
+    await SaveInMongo( _submission);
   }
 }
 
@@ -138,7 +152,7 @@ async function main () {
   await GetSubmission(page)
   await CreateLeetcodeSubmissions(page, browser);
 
-  console.log(LeetcodeSubmissions, LeetcodeSubmissions.length)
+  console.log( LeetcodeSubmissions.length)
   await WriteFile()
   await browser.close();
 
