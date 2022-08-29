@@ -1,16 +1,13 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 require('dotenv').config();
+const mongoose = require('mongoose');
+
 const password = process.env.password
 const email = process.env.email
 
-const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/Leetcode');
-
 const Leetcode = mongoose.model('Submissions', { name: String, runtime: String, language: String, url: String});
-
-// const bus = new Auto({ name: 'KaMAZ' });
-// bus.save().then(() => console.log('ppp'));
 
 var Submission = {
   name:'',
@@ -82,28 +79,51 @@ async function SingIn(page){
 }
 
 async function GoToSubmissions(page){
-  await page.waitForTimeout(30000)
-  await page.click('#navbar-right-container > div:nth-child(5) > a')  
+  await page.waitForTimeout(3000)
+  await page.waitForSelector('#navbar-right-container > div:nth-child(5) > a')
+  await page.click('#navbar-right-container > div:nth-child(5) > a')
+  await page.waitForSelector('body > div:nth-child(32) > div > div > ul > li:nth-child(5) > a')
   await page.click('body > div:nth-child(32) > div > div > ul > li:nth-child(5) > a')
 }
 
-async function SaveInMongo(_submission){
-  if( _submission.runtime !== 'N/A' ){
 
-    const mongo = new Leetcode({
+const DoesExist = (_name) =>
+  new Promise((resolve, reject) => {
+
+    Leetcode.find({ name: _name }, (err, res) => {
+      if (res.length === 0) {
+       //console.log("not found please try save " + _name, res.length);
+       resolve(true);
+      }
+      else {
+        //console.log("false");
+        resolve(false);
+      }
+    });f
+ })
+
+
+async function CreateMongoObject(_submission){
+  if( _submission.runtime !== 'N/A' ){
+    let mongo = new Leetcode({
        name: _submission.name,
+       runtime: _submission.runtime,
        status: _submission.status,
        language: _submission.language,
        url: _submission.url
-    });
-    
-    if (!!Leetcode.find({ name: _submission.name })) {
-      {console.log("new submission", _submission.name)
-      mongo.save().then(() => console.log('save success'));
-    };
-    } else console.log("exists", _submission.name);
-    LeetcodeSubmissions.push(_submission);
+    })
+    DoesExist(_submission.name)
+      .then((data) =>{
+        if(data){
+          MongoSave(mongo, _submission.name)
+        }
+      })
   }
+}
+
+async function MongoSave(mongo, _name) {
+  mongo.save().then(() => 
+  console.log("save success " + _name)) 
 }
 
 async function GetSubmission(page){
@@ -115,11 +135,13 @@ async function GetSubmission(page){
     _submission.runtime = await getRuntime(page, i)
     _submission.language = await getLanguage(page, i)
     _submission.url = 'https://leetcode.com'+ await getUrl(page, i)
-    await SaveInMongo( _submission);
+    await CreateMongoObject( _submission );
+    // if(!LeetcodeSubmissions.includes( _submission ))
+    //   LeetcodeSubmissions.push( _submission );
   }
 }
 
-async function CreateLeetcodeSubmissions(page, browser){
+async function CreateAll_Submissions(page, browser){
   while(true){
     try{
        let selector_disabled = '#submission-list-app > div > nav > ul > li.next.disabled'
@@ -137,20 +159,22 @@ async function CreateLeetcodeSubmissions(page, browser){
      }
    }
 }
+
 async function WriteFile(){
   for(let i = 0; i < LeetcodeSubmissions.length; i++) {
     fs.appendFileSync('./text.txt',JSON.stringify(LeetcodeSubmissions[i]) + '\n')
   }
 }
+
 async function main () {
   const browser = await puppeteer.launch(chromeOptions);
   const page = await browser.newPage();
   await page.goto('https://leetcode.com');
   
-  await SingIn(page)
-  await GoToSubmissions(page)
-  await GetSubmission(page)
-  await CreateLeetcodeSubmissions(page, browser);
+  await SingIn(page) // signin
+  await GoToSubmissions(page) // go to submissions tables
+  await GetSubmission(page)// get submissions information in first and everyone table
+  await CreateAll_Submissions(page, browser); //invite everyone table
 
   console.log( LeetcodeSubmissions.length)
   await WriteFile()
