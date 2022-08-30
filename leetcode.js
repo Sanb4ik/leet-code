@@ -59,11 +59,19 @@ async function CreateAll_Submissions(page, browser){
 }
 
 async function WriteFile(){
+  fs.truncateSync('js.md',0, err => {
+    if(err) throw err; // не удалось очистить файл
+    console.log('Файл успешно очищен');
+ });
+ fs.truncateSync('mysql.md',0, err => {
+  if(err) throw err; // не удалось очистить файл
+  console.log('Файл успешно очищен');
+});
   for(let i = 0; i < LeetcodeSubmissions.length; i++) {
     if(LeetcodeSubmissions[i].language === 'javascript')
-    fs.appendFileSync('./js.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
+    fs.appendFileSync('./js.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\\')
     if( LeetcodeSubmissions[i].language === 'mysql')
-    fs.appendFileSync('./mysql.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
+    fs.appendFileSync('./mysql.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\\')
 
   }
 }
