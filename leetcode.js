@@ -69,9 +69,9 @@ async function WriteFile(){
 });
   for(let i = 0; i < LeetcodeSubmissions.length; i++) {
     if(LeetcodeSubmissions[i].language === 'javascript')
-    fs.appendFileSync('./js.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '  ')
+    fs.appendFileSync('./js.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '  \n')
     if( LeetcodeSubmissions[i].language === 'mysql')
-    fs.appendFileSync('./mysql.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '  ')
+    fs.appendFileSync('./mysql.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '  \n')
 
   }
 }
