@@ -1,13 +1,8 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-require('dotenv').config();
-const mongoose = require('mongoose');
-
-const password = process.env.password
-const email = process.env.email
-
-mongoose.connect('mongodb://localhost:27017/Leetcode');
-const Leetcode = mongoose.model('Submissions', { name: String, runtime: String, language: String, url: String});
+var Actions = require('./PageActions.js');
+var Geters = require('./PageGeters.js');
+var DB = require('./DB_func.js');
 
 var Submission = {
   name:'',
@@ -17,46 +12,6 @@ var Submission = {
   language:''
 }
 
-async function getName(page, i){
-  let selector = `#submission-list-app > div > table > tbody > tr:nth-child(${i}) > td:nth-child(2)`
-  if(await page.waitForSelector(selector) !== null){
-    return page.$eval(selector, (el) => el.innerText);
-  }
- return "";
-}
-
-async function getStatus(page, i){
-  let selector = `#submission-list-app > div > table > tbody > tr:nth-child(${i}) > td:nth-child(3)`
-  if(await page.waitForSelector(selector) !== null){
-    return page.$eval(selector, (el) => el.innerText);
-  }
- return "";
-}
-
-async function getRuntime(page, i){
-  let selector = `#submission-list-app > div > table > tbody > tr:nth-child(${i}) > td:nth-child(4)`
-  if(await page.waitForSelector(selector) !== null){
-    return page.$eval(selector, (el) => el.innerText);
-  }
- return "";
-}
-
-async function getLanguage(page, i){
-  let selector = `#submission-list-app > div > table > tbody > tr:nth-child(${i}) > td:nth-child(5)`
-  if(await page.waitForSelector(selector) !== null){
-    return page.$eval(selector, (el) => el.innerText);
-  }
- return "";
-}
-
-async function getUrl(page, i) {
-  let selector = `#submission-list-app > div > table > tbody > tr:nth-child(${i}) > td:nth-child(3) > a`;
-  if(await page.waitForSelector(selector) !== null){
-    return page.$eval(selector, (el) => el.getAttribute("href"));
-  }
- return "";
-}
-
 const chromeOptions = {
     headless:false,
     defaultViewport: null
@@ -64,80 +19,23 @@ const chromeOptions = {
 
 let LeetcodeSubmissions = []
 
-async function SingIn(page){
-   page.click('#landing-page-app > div > div.header > div.inner > div.landing-navbar-base > div > div > div.nav-right > div > a:nth-child(5)');
-   page.screenshot({path: 'leet1.png'})
-  let str = email;
-  let pass = password;
-  await page.waitForSelector('#id_login');
-  await page.focus('#id_login');
-  await page.keyboard.type(str)
-  await page.focus('#id_password')
-  await page.keyboard.type(pass)
-  await page.keyboard.press("Enter");
-  await page.click('#signin_btn')
-}
-
-async function GoToSubmissions(page){
-  await page.waitForTimeout(3000)
-  await page.waitForSelector('#navbar-right-container > div:nth-child(5) > a')
-  await page.click('#navbar-right-container > div:nth-child(5) > a')
-  await page.waitForSelector('body > div:nth-child(32) > div > div > ul > li:nth-child(5) > a')
-  await page.click('body > div:nth-child(32) > div > div > ul > li:nth-child(5) > a')
-}
-
-
-const DoesExist = (_name) =>
-  new Promise((resolve, reject) => {
-
-    Leetcode.find({ name: _name }, (err, res) => {
-      if (res.length === 0) {
-       //console.log("not found please try save " + _name, res.length);
-       resolve(true);
-      }
-      else {
-        //console.log("false");
-        resolve(false);
-      }
-    });f
- })
-
-
-async function CreateMongoObject(_submission){
-  if( _submission.runtime !== 'N/A' ){
-    let mongo = new Leetcode({
-       name: _submission.name,
-       runtime: _submission.runtime,
-       status: _submission.status,
-       language: _submission.language,
-       url: _submission.url
-    })
-    DoesExist(_submission.name)
-      .then((data) =>{
-        if(data){
-          MongoSave(mongo, _submission.name)
-        }
-      })
-  }
-}
-
-async function MongoSave(mongo, _name) {
-  mongo.save().then(() => 
-  console.log("save success " + _name)) 
-}
-
 async function GetSubmission(page){
   await page.waitForTimeout(3000) 
   for (let i = 1; i < 21; i++) {
     let _submission = Object.create(Submission);
-    _submission.name = await getName(page, i)
-    _submission.status = await getStatus(page, i)
-    _submission.runtime = await getRuntime(page, i)
-    _submission.language = await getLanguage(page, i)
-    _submission.url = 'https://leetcode.com'+ await getUrl(page, i)
-    await CreateMongoObject( _submission );
-    // if(!LeetcodeSubmissions.includes( _submission ))
-    //   LeetcodeSubmissions.push( _submission );
+    
+    let runtime = await Geters.getRuntime(page, i)
+    if(runtime !=='N/A'){
+      _submission.name = await Geters.getName(page, i)
+      _submission.status = await Geters.getStatus(page, i) 
+      _submission.runtime = parseInt(runtime)
+      console.log(_submission.runtime)
+      _submission.language = await Geters.getLanguage(page, i)
+      _submission.url = 'https://leetcode.com'+ await Geters.getUrl(page, i)
+    await DB.CreateMongoObject( _submission );
+    if(LeetcodeSubmissions.find( s => s.name === _submission.name ) === undefined )
+      LeetcodeSubmissions.push(_submission);
+    }
   }
 }
 
@@ -162,7 +60,11 @@ async function CreateAll_Submissions(page, browser){
 
 async function WriteFile(){
   for(let i = 0; i < LeetcodeSubmissions.length; i++) {
-    fs.appendFileSync('./text.txt',JSON.stringify(LeetcodeSubmissions[i]) + '\n')
+    if(LeetcodeSubmissions[i].language === 'javascript')
+    fs.appendFileSync('./js.md',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
+    if( LeetcodeSubmissions[i].language === 'mysql')
+    fs.appendFileSync('./mysql.md',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
+
   }
 }
 
@@ -171,15 +73,13 @@ async function main () {
   const page = await browser.newPage();
   await page.goto('https://leetcode.com');
   
-  await SingIn(page) // signin
-  await GoToSubmissions(page) // go to submissions tables
+  await Actions.SingIn(page) // signin
+  await Actions.GoToSubmissions(page) // go to submissions tables
   await GetSubmission(page)// get submissions information in first and everyone table
   await CreateAll_Submissions(page, browser); //invite everyone table
-
-  console.log( LeetcodeSubmissions.length)
   await WriteFile()
+  console.log("close")
   await browser.close();
-
 };
 
 main();

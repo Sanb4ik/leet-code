@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "dotenv": "^16.0.1",
+    "esm": "^3.2.25",
     "migrate-mongo": "^9.0.0",
     "mongoose": "^6.5.3",
     "puppeteer": "^16.2.0"
