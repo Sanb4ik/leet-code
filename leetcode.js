@@ -61,9 +61,9 @@ async function CreateAll_Submissions(page, browser){
 async function WriteFile(){
   for(let i = 0; i < LeetcodeSubmissions.length; i++) {
     if(LeetcodeSubmissions[i].language === 'javascript')
-    fs.appendFileSync('./js.md',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
+    fs.appendFileSync('./js.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
     if( LeetcodeSubmissions[i].language === 'mysql')
-    fs.appendFileSync('./mysql.md',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
+    fs.appendFileSync('./mysql.txt',LeetcodeSubmissions[i].name +': '+ LeetcodeSubmissions[i].url + '\n')
 
   }
 }
