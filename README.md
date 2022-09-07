@@ -1,4 +1,5 @@
 ## JavaScript leetcode tasks
+Submission Detail: https://leetcode.com/submissions/detail/794158026/
 Count Good Nodes in Binary Tree: https://leetcode.com/submissions/detail/789115096/
 Rotate Image: https://leetcode.com/submissions/detail/787024284/  
 Number of Islands: https://leetcode.com/submissions/detail/786464753/  
